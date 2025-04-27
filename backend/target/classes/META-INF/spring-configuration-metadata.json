@@ -1,0 +1,11 @@
+{
+  "groups": [],
+  "properties": [
+    {
+      "name": "spring.flyway.repair",
+      "type": "java.lang.String",
+      "description": "Description for spring.flyway.repair."
+    }
+  ],
+  "hints": []
+}

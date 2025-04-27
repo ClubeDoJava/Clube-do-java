@@ -1,0 +1,47 @@
+groups:
+- name: clube-do-java-alerts
+  rules:
+  - alert: HighRequestLatency
+    expr: http_server_requests_seconds_sum{status!~"5.."} / http_server_requests_seconds_count{status!~"5.."} > 0.5
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: High request latency on {{ $labels.instance }}
+      description: "Request latency is above 500ms (current value: {{ $value }}s)"
+
+  - alert: ApiErrorRate
+    expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count[5m])) > 0.05
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: API Error Rate High
+      description: "API Error Rate is above 5% (current value: {{ $value }})"
+
+  - alert: JvmMemoryUsage
+    expr: sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: JVM Memory Usage High
+      description: "JVM Memory Usage is above 90% (current value: {{ $value }})"
+
+  - alert: HighCpuUsage
+    expr: process_cpu_usage > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High CPU Usage
+      description: "CPU Usage is above 80% (current value: {{ $value }})"
+
+  - alert: DatabaseConnections
+    expr: hikaricp_connections_active / hikaricp_connections_max > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High Database Connection Usage
+      description: "Database Connection Pool is above 80% utilization (current value: {{ $value }})"

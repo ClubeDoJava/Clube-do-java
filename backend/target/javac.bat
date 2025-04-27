@@ -1,0 +1,1 @@
+cmd.exe /X /C ""C:\Program Files\Zulu\zulu-21\bin\javac.exe" @C:/Users/michael.santos/Documents/GitHub/Clube-do-Java/backend/target/org.codehaus.plexus.compiler.javac.JavacCompiler12152772039588079808arguments"

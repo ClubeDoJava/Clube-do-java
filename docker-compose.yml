@@ -1,0 +1,133 @@
+
+
+services:
+  # Frontend Angular
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: clube-do-java-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    networks:
+      - clube-java-network
+
+  # Aplicação backend Java
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clube-do-java-app
+    restart: always
+    expose:
+      - "8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=clubedojava
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=P0rdemacia
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=7zR13HEYfQ2pIV3lUYEDIBpYI2yv4wgFmQbTXGKnJ0M5AfNcT8D6W9sCqPoZxLeO
+      - ASAAS_API_URL=https://sandbox.asaas.com/api/v3
+      - ASAAS_API_KEY=your_sandbox_api_key
+      - ASAAS_WEBHOOK_SECRET=your_sandbox_webhook_secret
+      - ORIGIN_ZIPCODE=44051714
+      - ORIGIN_CITY=Feira de Santana
+      - ORIGIN_STATE=BA
+      - CORREIOS_API_URL=https://api.correios.com.br
+      - CORREIOS_API_KEY=
+      - JADLOG_API_URL=https://api.jadlog.com.br
+      - JADLOG_API_KEY=
+      - BRASPRESS_API_URL=https://api.braspress.com
+      - BRASPRESS_API_KEY=
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - clube-java-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:17.2-alpine
+    container_name: clube-do-java-postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=clubedojava
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=P0rdemacia
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - clube-java-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis para cache
+  redis:
+    image: redis:7.0-alpine
+    container_name: clube-do-java-redis
+    restart: always
+    volumes:
+      - redis-data:/data
+    networks:
+      - clube-java-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Prometheus para monitoramento (opcional)
+  prometheus:
+    image: prom/prometheus:v2.37.0
+    container_name: clube-do-java-prometheus
+    restart: always
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    networks:
+      - clube-java-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    depends_on:
+      - app
+
+  # Grafana para visualização de métricas (opcional)
+  grafana:
+    image: grafana/grafana:9.0.0
+    container_name: clube-do-java-grafana
+    restart: always
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - clube-java-network
+    depends_on:
+      - prometheus
+
+networks:
+  clube-java-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
